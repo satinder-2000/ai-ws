@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jul 16 20:06:46 2026
+
+@author: singh
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("Plotting functions expect numpy.array or numpy.ma.masked_array as input, or objects that can be passed to numpy.asarray. ")
+print()
+b = np.matrix([[1, 2],[3, 4]])
+b_asarray= np.asarray(b)
+#print(b_asarray)
+
+np.random.seed(19680801)
+data = {'a': np.arange(50),
+        'c': np.random.randint(0,50,50),
+        'd': np.random.randn(50)}
+data['b'] = data['a']+10*np.random.randn(50)
+data['d'] = np.abs(data['d'])*100
+
+fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+ax.scatter('a','b',c='c',s='d', data=data)
+ax.set_xlabel('entry a')
+ax.set_ylabel('entry b')
+plt.show()
+
+
+print("Explicitly create Figures and Axes, and call methods on them (the \"object-oriented (OO) style\"")
+print()
+
+x=np.linspace(0, 2, 100)
+# Note that even in the OO-style, we use `.pyplot.figure` to create the Figure.
+fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+ax.plot(x, x, label='linear')
+ax.plot(x, x**2, label='quadratic')
+ax.plot(x, x**3, label='cubic')
+ax.set_xlabel('x label')
+ax.set_ylabel('y label')
+ax.set_title("Simple Plot")
+ax.legend()
+plt.show()
+
+print("or the pyplot-style:")
+print()
+x= np.linspace(0, 2, 100)
+plt.figure(figsize=(5, 2.7), layout='constrained')
+plt.plot(x, x, label='linear')
+plt.plot(x, x**2, label='quadratic')
+plt.plot(x, x**3, label='cubic')
+plt.xlabel('x label')
+plt.ylabel('y label')
+plt.title("Simple Plot")
+plt.legend()
+plt.show()
+
+print("-----Making a helper functions------")
+print()
+
+def my_plotter(ax, data1, data2, param_dict):
+    out = ax.plot(data1, data2, **param_dict)
+    return out
+
+
+data1, data2, data3, data4 = np.random.randn(4, 100) #make a 4 random data sets
+fig,(ax1, ax2) = plt.subplots(1,2,figsize=(5, 2.7))
+my_plotter(ax1, data1, data2, {'marker':'x'})
+my_plotter(ax2, data3, data4, {'marker': 'o'})
+plt.show()
+
+print("-----Styling Artists------")
+print()
+fig, ax = plt.subplots(figsize=(5, 2.7))
+x= np.arange(len(data1))
+ax.plot(x, np.cumsum(data1), color='blue',linewidth=3, linestyle='--')
+l, =ax.plot(x, np.cumsum(data2), color='orange',linewidth=2)
+l.set_linestyle(':')
+plt.show()
+
+
+print("-----Colors------")
+print()
+fig, ax = plt.subplots(figsize=(5, 2.7))
+ax.scatter(data1,data2,s=50, facecolor='C0', edgecolor='k')
+plt.show()
+
+print("-----Linewidths, linestyles, and markersizes------")
+print()
+fig, ax = plt.subplots(figsize=(5, 2.7))
+ax.plot(data1, 'o', label='data1')
+ax.plot(data2, 'd', label='data2')
+ax.plot(data3, 'v', label='data3')
+ax.plot(data4, 's', label='data4')
+ax.legend()
+plt.show()
+
+print("-----LABELLING PLOTS------")
+print("-----Axes labels and text------")
+print()
+mu, sigma = 115, 15
+x = mu + sigma * np.random.randn(10000)
+fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+# the histogram of the data
+n, bins, patches = ax.hist(x, 50, density=True, facecolor='C0', alpha=0.75)
+
+ax.set_xlabel('Length [cm]')
+ax.set_ylabel('Probability')
+ax.set_title('Aardvark lengths\n (not really)')
+ax.text(75, .025, r'$\mu=115,\ \sigma=15$')
+ax.axis([55, 175, 0, 0.03])
+ax.grid(True)
+plt.show()
+
+print("-----Annotations------")
+print()
+fig, ax = plt.subplots(figsize=(5, 2.7))
+
+t = np.arange(0.0, 5.0, 0.01)
+s = np.cos(2 * np.pi * t)
+line, = ax.plot(t, s, lw=2)
+
+ax.annotate('local max', xy=(2,1), xytext=(3, 1.5),
+            arrowprops=dict(facecolor='black', shrink=0.05))
+
+ax.set_ylim(-2,2)
+plt.show()
+
+print("-----Legends------")
+print()
+fig, ax = plt.subplots(figsize=(5, 2.7))
+ax.plot(np.arange(len(data1)), data1, label='data1')
+ax.plot(np.arange(len(data2)), data2, label='data2')
+ax.plot(np.arange(len(data3)), data3,'d', label='data3')
+ax.legend()
+plt.show()
+
+print("-----Axis scales and ticks------")
+print()
+fig, axs = plt.subplots(1,2,figsize=(5, 2.7),layout='constrained')
+xdata = np.arange(len(data1))
+data=10*data1
+
+axs[0].plot(xdata, data)
+
+axs[1].set_yscale('log')
+axs[1].plot(xdata, data)
+plt.show()
+
+print("-----Tick locators and formatters------")
+print()
+fig, axs = plt.subplots(2, 1, layout='constrained')
+axs[0].plot(xdata, data1)
+axs[0].set_title('Automatic ticks')
+
+axs[1].plot(xdata,data1)
+axs[1].set_xticks(np.arange(0, 100, 30),['zero','30', 'sixty', '90'])
+axs[1].set_yticks([-1.5, 0, 1.5]) # note that we don't need to specify labels
+axs[1].set_title('Manual ticks')
+plt.show()
+
+print("-----Plotting dates and strings------")
+print()
+from matplotlib.dates import ConciseDateFormatter
+
+fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+dates = np.arange(np.datetime64('2021-11-15'),np.datetime64('2021-12-25'),
+np.timedelta64(1,'h'))
+data = np.cumsum(np.random.randn(len(dates)))
+ax.plot(dates, data)
+ax.xaxis.set_major_formatter(ConciseDateFormatter(ax.xaxis.get_major_locator()))
+plt.show()
+
+print("-----For strings, we get categorical plotting ------")
+print()
+fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+categories=['turnips','rutabaga','cucumber','pumpkins']
+ax.bar(categories, np.random.rand(len(categories)))
+plt.show() 
