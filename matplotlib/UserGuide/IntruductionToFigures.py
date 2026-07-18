@@ -29,3 +29,20 @@ fig, axs = plt.subplot_mosaic([['A', 'right'],['B','right']],
 for ax_name in axs.items():
     ax.text(0.5, 0.5, ax_name,ha='center',va='center' )
 plt.show()
+
+print("nested layout in a Figure, with two or more sets of Axes that do not share the same subplot grid")
+print()
+
+fig = plt.figure(layout='constrained', facecolor='lightskyblue')
+fig.suptitle('Figure')
+figL, figR = fig.subfigures(1,2)
+figL.set_facecolor('thistle')
+axL=figL.subplots(2, 1, sharex=True)
+axL[1].set_xlabel('x[m]')
+figL.suptitle('Left subfigure')
+figR.set_facecolor('paleturquoise')
+axR=figR.subplots(1, 2, sharey=True)
+axR[0].set_title('Axes 1')
+figR.suptitle('Right subfigure')
+plt.show()
+
