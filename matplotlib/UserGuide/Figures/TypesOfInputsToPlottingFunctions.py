@@ -5,6 +5,7 @@ Created on Thu Jul 16 20:06:46 2026
 
 @author: singh
 """
+print("Source:https://matplotlib.org/stable/users/explain/quick_start.html")
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -177,4 +178,54 @@ print()
 fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
 categories=['turnips','rutabaga','cucumber','pumpkins']
 ax.bar(categories, np.random.rand(len(categories)))
-plt.show() 
+plt.show()
+
+print("-----Additional Axis objects ------")
+print()
+
+fig, (ax1, ax3) = plt.subplots(1,2, figsize=(7, 2.7), layout='constrained' )
+l1, = ax1.plot(t, s)
+ax2 = ax1.twinx()
+l2, = ax2.plot(t, range(len(t)),'C1')
+ax2.legend([l1, l2],['Sine (left)', 'Straight (right)'])
+
+ax3.plot(t, s)
+ax3.set_xlabel('Angle [rad]')
+ax4 = ax3.secondary_xaxis('top', (np.rad2deg, np.deg2rad))
+ax4.set_xlabel('Angle[deg]')
+plt.show()
+
+print("-----Color mapped data ------")
+print()
+from matplotlib.colors import LogNorm
+
+X, Y = np.meshgrid(np.linspace(-3, 3, 128), np.linspace(-3, 3, 128))
+Z = (1 - X/2 + X**5 + Y**3) * np.exp(-X**2 - Y**2)
+
+fig, axs = plt.subplots(2, 2, layout='constrained')
+pc = axs[0, 0].pcolormesh(X, Y, Z, vmin=-1, vmax=1, cmap='RdBu_r')
+fig.colorbar(pc, ax=axs[0, 0])
+axs[0, 0].set_title('pcolormesh()')
+
+co = axs[0, 1].contourf(X, Y, Z, levels=np.linspace(-1.25, 1.25, 11))
+fig.colorbar(co, ax=axs[0, 1])
+axs[0, 1].set_title('contourf()')
+
+pc = axs[1, 0].imshow(Z**2 * 100, cmap='plasma', norm=LogNorm(vmin=0.01, vmax=100))
+fig.colorbar(pc, ax=axs[1, 0], extend='both')
+axs[1, 0].set_title('imshow() with LogNorm()')
+
+pc = axs[1, 1].scatter(data1, data2, c=data3, cmap='RdBu_r')
+fig.colorbar(pc, ax=axs[1, 1], extend='both')
+axs[1, 1].set_title('scatter()')
+plt.show()
+
+print("-----Working with multiple Figures and Axes------")
+print()
+
+fig,axd = plt.subplot_mosaic([['upleft','right'],
+                              ['lowleft','right']],layout='constrained')
+axd['upleft'].set_title('upleft')
+axd['lowleft'].set_title('lowleft')
+axd['right'].set_title('right')
+plt.show()
