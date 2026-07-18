@@ -52,5 +52,15 @@ def plot_linestyles(ax, linestyles, title):
     # For each line style, add a text annotation with a small offset from
     # the reference point (0 in Axes coords, y tick value in Data coords).
     for i, (name, linestyle) in enumerate(linestyles):
-        
+        ax.annotate(repr(linestyle),
+                    xy=(0.0,i), xycoords=ax.get_yaxis_transform(),
+                    xytext=(-6, -12), textcoords='offset points',
+                    color='blue', fontsize=8, ha='right', family='monospace')
+     
+fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(7,8), height_ratios=[1,3],
+                               layout='constrained')
+
+plot_linestyles(ax0, linestyle_str[::-1], title='Named linestyles')
+plot_linestyles(ax1, linestyle_tuple[::-1], title='Parameterized linestyles')       
                                          
+plt.show()
