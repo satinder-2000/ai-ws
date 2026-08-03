@@ -7,6 +7,7 @@ Created on Sat Aug  1 23:43:46 2026
 """
 import tensorflow as tf
 import numpy as np
+from tensorflow.python.ops.ragged import ragged_tensor
 
 print("-----Basics-----")
 
@@ -122,3 +123,108 @@ print()
 print("rank_3_tensor:\n",rank_3_tensor)
 print()
 print("tf.reshape(rank_3_tensor, [-1]):\n",tf.reshape(rank_3_tensor, [-1]))
+print()
+print("--- tf.reshape: combine or split adjacent axes (or add/remove 1s)")
+print()
+print(tf.reshape(rank_3_tensor, [3*2, 5]), "\n")
+print()
+print("---Swapping axes in tf.reshape does not work; you need tf.transpose for that.---")
+print()
+print("tf.reshape(rank_3_tensor, [2, 3, 5]):\n",tf.reshape(rank_3_tensor, [2, 3, 5]))
+print()
+print("tf.reshape(rank_3_tensor, [5, 6]):\n",tf.reshape(rank_3_tensor, [5, 6]))
+print()
+# The code below does't work at all
+#print("tf.reshape(rank_3_tensor, [7, -1]):\n",tf.reshape(rank_3_tensor, [7, -1]))
+print("---More on Dtypes---")
+print()
+print("You can cast from type to type.")
+the_f64_tensor = tf.constant([2.2, 3.3, 4.4], dtype=tf.float64)
+print("the_f64_tensor: ",the_f64_tensor)
+the_f16_tensor = tf.cast(the_f64_tensor, dtype=tf.float16)
+print("the_f16_tensor: ",the_f16_tensor)
+the_u8_tensor =tf.cast(the_f16_tensor ,dtype=tf.uint8)
+print("the_u8_tensor: ",the_u8_tensor)
+print()
+print("---Broadcasting---")
+x = tf.constant([1, 2, 3])
+print("x = tf.constant([1, 2, 3])")
+y = tf.constant(2)
+print("y = tf.constant(2)")
+z = tf.constant([2, 2, 2])
+print("z = tf.constant([2, 2, 2])")
+print("tf.multiply(x, 2)",tf.multiply(x, 2))
+print("x * y:", x * y)
+print("x * z:", x * z)
+print()
+print("axes with length 1 can be stretched out to match the other arguments")
+print()
+x = tf.reshape(x, [3,1])
+print("tf.reshape(x, [3,1]):\n",x)
+y = tf.range(1,5)
+print("tf.range(1,5):\n",y)
+print("tf.multiply(x, y):\n", tf.multiply(x, y))
+print()
+print("---Here is the same operation without broadcasting:---")
+print()
+x_stretch = tf.constant([[1, 1, 1, 1],
+                         [2, 2, 2 , 2],
+                         [3, 3, 3, 3]])
+print("x_stretch: \n",x_stretch)
+y_stretch = tf.constant([[1, 2, 3, 4],
+                         [1, 2, 3, 4],
+                         [1, 2, 3, 4]])
+print( "y_stretch: \n",y_stretch)
+
+print("x_stretch * y_stretch:\n", x_stretch * y_stretch)
+print()
+print("---broadcast operation never materializes the expanded tensors in memory---")
+print()
+print(tf.broadcast_to(tf.constant([1, 2, 3]), [3, 3]))
+print()
+print("-----Ragged Tensors---")
+print()
+ragged_list = [
+    [0, 1, 2, 3],
+    [4, 5],
+    [6, 7, 8],
+    [9]]
+
+try:
+    tensor = tf.constant(ragged_list)
+except Exception as e:
+    print(f"{type(e).__name__}:{e}")
+
+print("ValueError above")
+print("Instead create a tf.RaggedTensor using tf.ragged.constant:")
+ragged_tensor = tf.ragged.constant(ragged_list)
+print("ragged_tensor:\n",ragged_tensor)
+print("ragged_tensor.shape:\n",ragged_tensor.shape)
+
+print()
+print("-----String Tensors---")
+print()
+scaler_string_tensor = tf.constant("Gray wolf")
+print("scaler_string_tensor:\n",scaler_string_tensor)
+print()
+tensor_of_strings = tf.constant([
+    "Gray wolf",
+    "Quick brown fox",
+    "Lazy dog"])
+print("tensor_of_strings:\n",tensor_of_strings)
+print()
+print("Unicode characters they are utf-8 encoded.\n",tf.constant("🥳👍"))
+print()
+print("tf.strings.split(scaler_string_tensor, sep=" "):\n",tf.strings.split(scaler_string_tensor, sep=" "))
+print()
+print("tf.strings.split(tensor_of_strings):\n",tf.strings.split(tensor_of_strings))
+print()
+text = tf.constant("1 10 100")
+print(tf.strings.to_number(tf.strings.split(text, " ")))
+print()
+print("Although you can't use tf.cast to turn a string tensor into numbers, you can convert it into bytes, and then into numbers.")
+print()
+byte_strings = tf.strings.bytes_split(tf.constant("Duck"))
+byte_ints = tf.io.decode_raw(tf.constant("Duck"), tf.uint8)
+print("Byte strings:", byte_strings)
+print("Bytes:", byte_ints)
