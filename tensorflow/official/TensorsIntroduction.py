@@ -7,6 +7,8 @@ Created on Sat Aug  1 23:43:46 2026
 """
 import tensorflow as tf
 import numpy as np
+from tensorflow.python.data.util import sparse
+from tensorflow.python.framework import sparse_tensor
 from tensorflow.python.ops.ragged import ragged_tensor
 
 print("-----Basics-----")
@@ -228,3 +230,19 @@ byte_strings = tf.strings.bytes_split(tf.constant("Duck"))
 byte_ints = tf.io.decode_raw(tf.constant("Duck"), tf.uint8)
 print("Byte strings:", byte_strings)
 print("Bytes:", byte_ints)
+print()
+print("Or split it up as unicode and then decode it")
+print()
+unicode_bytes=tf.constant("アヒル 🦆")
+print("\nUnicode bytes:", unicode_bytes)
+unicode_char_bytes=tf.strings.unicode_split(unicode_bytes,"UTF-8")
+print("Unicode chars:", unicode_char_bytes)
+unicode_values=tf.strings.unicode_decode(unicode_bytes,"UTF-8")
+print("\nUnicode values:", unicode_values)
+print()
+print("-----Sparse Tensors-----")
+sparse_tensor = tf.sparse.SparseTensor(indices=[[0, 0],[1, 2]],
+                                       values=[1, 2],
+                                       dense_shape=[3, 4])
+print("sparse_tensor:\n", sparse_tensor)
+print(tf.sparse.to_dense(sparse_tensor))
