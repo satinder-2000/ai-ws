@@ -1,6 +1,10 @@
+from fileinput import filename
+
 import tensorflow as tf
 import keras
+from cryptography.hazmat.asn1.asn1 import sequence
 from keras import layers
+
 
 print("-----API overview: a first end-to-end example-----")
 print()
@@ -228,3 +232,64 @@ train_dataset = train_dataset.shuffle(buffer_size=1024).batch(64)
 
 # Only use the 100 batches per epoch (that's 64 * 100 samples)
 model.fit(train_dataset, epochs=3, steps_per_epoch=100)
+print()
+print("---Using a validation dataset---")
+print()
+model = get_compiled_model()
+
+# Prepare the training dataset
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.shuffle(buffer_size=1024).batch(64)
+
+# Prepare the validation dataset
+val_dataset=tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_dataset = val_dataset.batch(64)
+
+model.fit(train_dataset, epochs=1, validation_data=val_dataset)
+print()
+print("validation_steps > many validation steps the model should run with the validation dataset")
+print()
+model = get_compiled_model()
+
+# Prepare the training dataset
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.shuffle(buffer_size=1024).batch(64)
+
+# Prepare the validation dataset
+val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_dataset = val_dataset.batch(64)
+
+model.fit(
+    train_dataset,
+    epochs=1,
+    validation_data=val_dataset,
+    validation_steps=10
+)
+
+print()
+print("-----Other input formats supported-----")
+print("Using a keras.utils.Sequence object as input")
+print()
+from skimage.io import imread
+from skimage.transform import resize
+import numpy as np
+
+class CIFAR10Sequence(keras.utils.Sequence):
+    def __init__(self, filenames, labels, batch_size):
+        self.filenames, self.labels = filenames, labels
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return int(np.ceil(len(self.filenames) / float(self.batch_size)))
+
+    def __getitem__(self, idx):
+        batch_x = self.filenames[idx * self.batch_size:(idx + 1) * self.batch_size]
+        batch_y  = self.labels[idx * self.batch_size:(idx + 1) * self.batch_size]
+        return np.array([
+            resize(imread(filename), (200, 200))
+            for filename in batch_x]), np.array(batch_y)
+
+
+sequence= CIFAR10Sequence(filenames, labels, batch_size=self.batch_size)
+model.fit(sequence, epochs=10)
+
