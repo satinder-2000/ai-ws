@@ -4,7 +4,9 @@ import tensorflow as tf
 import keras
 from cryptography.hazmat.asn1.asn1 import sequence
 from keras import layers
-
+from keras._tf_keras import keras
+from pandas.plotting._matplotlib import timeseries
+from prometheus_client import metrics
 
 print("-----API overview: a first end-to-end example-----")
 print()
@@ -290,6 +292,126 @@ class CIFAR10Sequence(keras.utils.Sequence):
             for filename in batch_x]), np.array(batch_y)
 
 
-sequence= CIFAR10Sequence(filenames, labels, batch_size=self.batch_size)
-model.fit(sequence, epochs=10)
+#sequence= CIFAR10Sequence(filenames, labels, batch_size=self.batch_size)
+#model.fit(sequence, epochs=10)
+print()
+print("Using sample weighting and class weighting")
+class_weight = {
+0: 1.0,
+    1: 1.0,
+    2: 1.0,
+    3: 1.0,
+    4: 1.0,
+    # Set weight "2" for class "5",
+    # making this class 2x more important
+    5: 2.0,
+    6: 1.0,
+    7: 1.0,
+    8: 1.0,
+    9: 1.0,
+}
+print("Fit with class weight")
+model = get_compiled_model()
+model.fit(x_train, y_train,class_weight=class_weight, batch_size=64, epochs=1)
+print()
+print("Sample weights")
+sample_weight = np.ones(shape=(len(y_train)))
+sample_weight[y_train == 5] = 2.0
+print("Fit with sample weight")
+model = get_compiled_model()
+model.fit(x_train, y_train,sample_weight=sample_weight, batch_size=64, epochs=1)
+print()
+print("Here's a matching Dataset example:")
+sample_weight = np.ones(shape=(len(y_train)))
+sample_weight[y_train == 5] = 2.0
+# Create a Dataset that includes sample weights
+# (3rd element in the return tuple).
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train, sample_weight))
 
+# Shuffle and slice the dataset.
+train_dataset = train_dataset.shuffle(buffer_size=1024).batch(64)
+
+model = get_compiled_model()
+model.fit(train_dataset, epochs=1)
+print()
+print("-----Passing data to multi-input, multi-output models-----")
+image_input = keras.Input(shape=(32, 32, 3),name="img_input")
+timeseries_input = keras.Input(shape=(None, 10),name="ts_input")
+
+x1 = layers.Conv2D(3, 3)(image_input)
+x1 = layers.GlobalMaxPooling2D()(x1)
+
+x2 = layers.Conv1D(3, 3)(timeseries_input)
+x2 = layers.GlobalMaxPooling1D()(x2)
+
+x = layers.Concatenate(axis=-1)([x1, x2])
+
+score_output = layers.Dense(1, name="score_output")(x)
+class_output = layers.Dense(5, name="class_output")(x)
+
+model = keras.Model(
+    inputs=[image_input, timeseries_input], outputs=[score_output, class_output]
+)
+
+keras.utils.plot_model(model,  "multi_input_and_output_model.png", show_shapes=True)
+
+print("specify different losses to different outputs, by passing the loss functions as a list")
+print()
+model.compile(
+    optimizer=keras.optimizers.RMSprop(lr=0.001),
+    loss=[keras.losses.MeanSquaredError(),keras.losses.CategoricalCrossentropy()]
+)
+
+model.compile(
+    optimizer=keras.optimizers.RMSprop(lr=0.001),
+    loss=[keras.losses.MeanSquaredError(),keras.losses.CategoricalCrossentropy()],
+    metrics=[
+        [
+            keras.metrics.MeanAbsolutePercentageError(),
+            keras.metrics.MeanAbsoluteError()
+        ],
+        [keras.metrics.CategoricalAccuracy()]
+    ]
+)
+print(" specify per-output losses and metrics via a dict:")
+model.compile(
+    optimizer=keras.optimizers.RMSprop(lr=0.001),
+    loss={
+        "score_output": keras.losses.MeanSquaredError(),
+        "class_output": keras.losses.CategoricalCrossentropy()
+    },
+    metrics={
+        "score_output": [
+            keras.metrics.MeanAbsolutePercentageError(),
+            keras.metrics.MeanAbsoluteError()
+        ],
+        "class_output": [keras.metrics.CategoricalAccuracy()],
+     }
+)
+print("\"score\" loss in our example, by giving to 2x the importance of the class loss")
+model.compile(
+    optimizer=keras.optimizers.RMSprop(lr=0.001),
+    loss={
+        "score_output": keras.losses.MeanSquaredError(),
+        "class_output": keras.losses.CategoricalCrossentropy()
+    },
+metrics={
+        "score_output": [
+            keras.metrics.MeanAbsolutePercentageError(),
+            keras.metrics.MeanAbsoluteError()
+        ],
+        "class_output": [keras.metrics.CategoricalAccuracy()],
+     },
+    loss_weights={"score_output": 2.0, "class_output": 1.0}
+)
+print("choose not to compute a loss for certain outputs > are meant for prediction but not for training ")
+# List loss version
+model.compile(
+    optimizer=keras.optimizers.RMSprop(lr=0.001),
+    loss=[None, keras.losses.CategoricalCrossentropy()],
+)
+# Or dict loss version
+model.compile(
+    optimizer=keras.optimizers.RMSprop(1e-3),
+    loss={"class_output": keras.losses.CategoricalCrossentropy()},
+)
