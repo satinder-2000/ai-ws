@@ -59,4 +59,3 @@ class FeatureBinarizerAndScaler:
                 print(binarizedAndScaledFeatures.shape)
 
         return binarizedAndScaledFeatures
-    
