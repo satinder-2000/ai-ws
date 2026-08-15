@@ -111,4 +111,67 @@ mod = MyModule(3)
 print(mod.multiply(tf.constant([1, 2, 3])))
 print("---save the module---")
 save_path='./saved'
-tf.saved_model.save(mod, save_path)        
+tf.saved_model.save(mod, save_path)
+print("---reload the model")
+reloaded = tf.saved_model.load(save_path)
+print("reloaded.multiply(tf.constant([1,2,3])): \n",reloaded.multiply(tf.constant([1,2,3])))
+print()
+print("-----Training loops-----")
+print()
+import matplotlib
+from matplotlib import pyplot as plt
+
+matplotlib.rcParams['figure.figsize'] = [9, 6]
+
+x = tf.linspace(-2, 2, 201)
+x = tf.cast(x, tf.float32)
+
+def f(x):
+    y = x**2+2*x - 5
+    return y
+
+y = f(x) + tf.random.normal(shape=[201])
+
+plt.plot(x.numpy(), y.numpy(), '.', label='Data')
+plt.plot(x, f(x), label='Ground truth')
+plt.legend()
+plt.show()
+
+
+print("Create a quadratic model with randomly initialized weights and a bias:")
+print()
+class Model(tf.Module):
+    def __init__(self):
+        # Randomly generate weight and bias terms
+        rand_init = tf.random.uniform(shape=[3], minval=0, maxval=5, seed=22)
+        # Initialize model parameters
+        self.w_q = tf.Variable(rand_init[0])
+        self.w_l = tf.Variable(rand_init[1])
+        self.b = tf.Variable(rand_init[2])
+        
+    
+    @tf.function
+    def __call__(self, x):
+        # Quadratic Model : quadratic_weight * x^2 + linear_weight * x + bias
+        return self.w_q * (x**2) + self.w_l*x + self.b
+    
+
+print("First, observe your model's performance before training:")
+print()
+quad_model = Model()
+
+def plot_preds(x, y, f, model, title):
+    plt.figure()
+    plt.plot(x, y, '.', label='Data')
+    plt.plot(x, f(x), label='Ground truth')
+    plt.plot(x, model(x), label='Predictions')
+    plt.title(title)
+    plt.legend()
+    plt.show()
+    
+
+plot_preds(x, y, f, quad_model, 'Before training')
+        
+        
+
+
