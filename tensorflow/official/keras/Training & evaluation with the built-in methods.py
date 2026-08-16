@@ -415,3 +415,6 @@ model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
     loss={"class_output": keras.losses.CategoricalCrossentropy()},
 )
+
+print()
+print("Passing data to a multi-input or multi-output model in fit() ------------")
