@@ -4,7 +4,11 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = 'empty-project-type'
+<<<<<<< HEAD
 recent_files = ['Udemy/TensorflowCertifiedDeveloper/data_preprocessing_template.py', 'Udemy/TensorflowCertifiedDeveloper/Data - Data.csv', 'Udemy/TensorflowCertifiedDeveloper/data_preprocessing_tools.py', 'Udemy/TensorflowCertifiedDeveloper/ArtificialNeuralNetworks/artificial_neural_network.py']
+=======
+recent_files = ['CompactConvolutionalTransformers.py']
+>>>>>>> d155f6f5f48b02276c74607e65b0f0defc677ef6
 
 [main]
 version = 0.2.0
