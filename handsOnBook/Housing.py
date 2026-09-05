@@ -80,3 +80,86 @@ for train_index, test_index in split.split(housing, housing["income_cat"]):
     strat_test_set = housing.loc[test_index]
     
     print("\nstrat_test_set['income_cat'].value_counts() / len(strat_test_set):\n",strat_test_set['income_cat'].value_counts() / len(strat_test_set))
+
+print("\nremove the income_cat attribute\n")
+for set_ in (strat_train_set, strat_test_set):
+    set_.drop("income_cat", axis=1, inplace=True)
+    
+    
+print("\vDiscover and Visulizae the Data to Gain Insights\n")
+housing = strat_train_set.copy()
+
+housing.plot(kind="scatter", x ="longitude", y="latitude")
+
+housing.plot(kind="scatter", x ="longitude", y="latitude",alpha=0.1)
+
+print("\nPlotting the house prices\n")
+housing.plot(kind="scatter", x="longitude", y="latitude", alpha=0.4,
+             s=housing["population"]/100, label ="population", figsize=(10,7),
+             c = "median_house_value", cmap=plt.get_cmap("jet"), colorbar=True)
+plt.legend()
+
+print("\n-----Looking for Correlations-----\n")
+#corr_matrix = housing.corr()
+#corr_matrix = housing.corr()
+#corr_matrix = housing.corr()
+#corr_matrix["median_house_value"].sort_values(ascending=False)
+print("\nUsing pandas scatter_matrix() to check the correlations\n")
+from pandas.plotting import scatter_matrix
+
+attributes=["median_house_value", "median_income", "total_rooms","housing_median_age"]
+scatter_matrix(housing[attributes],figsize=(12,8))
+
+print("\nZoom into the correlation between mediand_income and median_house_value\n")
+housing.plot(kind="scatter", x="median_income", y="median_house_value",
+             alpha=0.1)
+print("\nSome interesting attribute combinations\n")
+housing["rooms_per_household"]= housing["total_rooms"]/housing["households"]
+print("\n housing['rooms_per_household'] \n",housing["rooms_per_household"])
+housing["bedrooms_per_room"]= housing["total_bedrooms"]/housing["total_rooms"]
+print("\n housing['bedrooms_per_room'] \n",housing["bedrooms_per_room"])
+housing["population_per_household"]= housing["population"]/housing["households"]
+print("\n housing['population_per_household'] \n",housing["population_per_household"])
+
+print("\n take a look at correlation matrix again\n")
+#corr_matrix=housing.corr()
+#corr_matrix["median_house_value"].sort_values(ascending=False)
+print("\n-----Prepare the Data for ML Algorithms-----\n")
+print("\nSeperate the predictors and the labels\n")
+housing=strat_train_set.drop("median_house_value", axis=1)
+housing_labels=strat_train_set["median_house_value"].copy()
+
+print("\n-----Data Cleaning-----\n")
+from sklearn.impute import SimpleImputer
+
+imputer = SimpleImputer(strategy="median")
+#median can only be calculated on numeric values so drop ocean_proximity
+housing_num = housing.drop("ocean_proximity",axis=1)
+imputer.fit(housing_num)
+print("\nimputer.statistics_\n",imputer.statistics_)
+print("\nhousing_num.median().values\n",housing_num.median().values)
+print("\nUsing the 'trained' imputer to transforrm the training set")
+print("by replacing missing values with the learned medians")
+X = imputer.transform(housing_num)
+#print("\n imputer.transform(housing_num)\n", X)
+print("\nConvert th Numpy array above into a pandas DataFrame\n")
+housing_tr=pd.DataFrame(X, columns=housing_num.columns,
+                        index=housing_num.index)
+print("\nhousing_tr:\n",housing_tr)
+print("\n-----Handling Text and Categorical Attributes-----\n")
+housing_cat=housing[["ocean_proximity"]]
+print("\nhousing_cat.head(10):\n",housing_cat.head(10))
+print("\n-----Convert the attrinutes to numeric values as most of ML algorithms prefer to work with numbers-----\n")
+from sklearn.preprocessing import OrdinalEncoder
+
+ordinal_encoder = OrdinalEncoder()
+housing_cat_encoded=ordinal_encoder.fit_transform(housing_cat)
+print("\nhousing_cat_encoded[:10]\n",housing_cat_encoded[:10])
+print("\nordinal_encoder.categories_\n",ordinal_encoder.categories_)
+
+print("\n-----Applying one-hot encoding-----\n")
+from sklearn.preprocessing import OneHotEncoder
+
+cat_encoder = OneHotEncoder()
+housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
+print("\nhousing_cat_1hot.toarray():\n",housing_cat_1hot.toarray())
