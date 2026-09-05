@@ -163,3 +163,4 @@ from sklearn.preprocessing import OneHotEncoder
 cat_encoder = OneHotEncoder()
 housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
 print("\nhousing_cat_1hot.toarray():\n",housing_cat_1hot.toarray())
+print("\ncat_encoder.categories_\n",cat_encoder.categories_)
