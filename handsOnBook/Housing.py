@@ -291,7 +291,15 @@ forest_reg_rmse_scores=np.sqrt(-forest_reg_scores)
 display_scores(forest_reg_rmse_scores)
 
 print("\n The Random Forest Reg is also overfitting (SD is 2225.46. Let's compute same scores for Support Vector Machines\n")
-#from sklearn import svm
+
+from sklearn.svm import SVR
+def perform_svm(prepaired_data, labels):
+    svr = SVR(kernel='rbf', C=100, gamma=0.5, epsilon=0.1)
+    svr.fit(prepaired_data, labels)
+    
+    svr_predicted = svr.predict(prepaired_data)
+    return svr_predicted
+    
 
 
 
