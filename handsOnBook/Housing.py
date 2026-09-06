@@ -6,8 +6,6 @@ Created on Fri Sep  4 10:32:58 2026
 @author: singh
 """
 import os
-import tarfile
-import urllib
 import pandas as pd
 
 HOUSING_PATH = os.path.join('/home/singh/temp/misc')
@@ -164,3 +162,137 @@ cat_encoder = OneHotEncoder()
 housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
 print("\nhousing_cat_1hot.toarray():\n",housing_cat_1hot.toarray())
 print("\ncat_encoder.categories_\n",cat_encoder.categories_)
+
+print("\n-----Custom Transformers-----\n")
+from sklearn.base import BaseEstimator, TransformerMixin
+
+rooms_ix, bedrooms_ix, population_ix, households_ix = 3,4,5,6
+
+class CombinedAttributesAdder(BaseEstimator, TransformerMixin):
+    def __init__(self, add_bedrooms_per_room=True): # no *args or **kwargs
+        self.add_bedrooms_per_room=add_bedrooms_per_room
+        
+    def fit(self, X, y=None):
+        return self #nothing to do
+    
+    def transform(self, X):
+        rooms_per_household = X[:, rooms_ix] / X[:,households_ix]
+        poplation_per_household = X[:, population_ix] / X[:, households_ix]
+        if self.add_bedrooms_per_room:
+            bedrooms_per_room = X[:,bedrooms_ix]/X[:,rooms_ix]
+            return np.c_[X, rooms_per_household, poplation_per_household, bedrooms_per_room]
+        
+        else:
+            return np.c_[X, rooms_per_household, poplation_per_household]
+        
+        
+attr_adder = CombinedAttributesAdder(add_bedrooms_per_room=False)
+housing_extra_attribs = attr_adder.transform(housing.values)
+
+print("\n-----Feature Scaling-----\n")
+print("\nTransformation Pipelines - StandardScaler")
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+
+imputer = SimpleImputer(strategy="median")
+#median can only be calculated on numeric values so drop ocean_proximity
+housing_num = housing.drop("ocean_proximity",axis=1)
+imputer.fit(housing_num)
+
+
+num_pipeline = Pipeline([
+    ('imputer', SimpleImputer(strategy="median")),
+    ('attribs_adder', CombinedAttributesAdder()),
+    ('std_scaler', StandardScaler())
+])
+
+housing_num_tr = num_pipeline.fit_transform(housing_num)
+
+from sklearn.compose import ColumnTransformer
+
+num_attribs = list(housing_num)
+cat_attribs = ["ocean_proximity"]
+
+full_pipeline = ColumnTransformer([
+    ("num", num_pipeline, num_attribs),
+    ("cat", OneHotEncoder(),cat_attribs)
+])
+
+housing_prepared = full_pipeline.fit_transform(housing)
+print("\n-----Select and Train a Model-----\n")
+from sklearn.linear_model import LinearRegression
+
+lin_reg = LinearRegression()
+lin_reg.fit(housing_prepared, housing_labels)
+
+print("We have working Linear Regresstion. Try out few instances from the training set:\n")
+some_data=housing.iloc[:5]
+print("\nhousing.iloc[:5]:\n",some_data)
+some_labels=housing_labels.iloc[:5]
+print("\nhousing_labels.iloc[:5]:\n",some_labels)
+some_data_prepared=full_pipeline.transform(some_data)
+print("\nfull_pipeline.transform(some_data):\n", some_data_prepared)
+print("Predictions", lin_reg.predict(some_data_prepared))
+
+print("\nmeasure RMSE on the whole training set\n")
+from sklearn.metrics import mean_squared_error
+housing_predictions=lin_reg.predict(housing_prepared)
+lin_mse=mean_squared_error(housing_labels, housing_predictions)
+lin_rmse=np.sqrt(lin_mse)
+print("\nlin_rmse:\n",lin_rmse)
+
+print("\nLet's train a DecisionTreeRegressor for complex nonlinear relationships.:\n")
+from sklearn.tree import DecisionTreeRegressor
+
+tree_reg = DecisionTreeRegressor()
+tree_reg.fit(housing_prepared, housing_labels)
+
+housing_predictions=tree_reg.predict(housing_prepared)
+tree_mse=mean_squared_error(housing_labels,housing_predictions)
+tree_rmse = np.sqrt(tree_mse)
+print("\ntree_rmse:\n",tree_rmse) #0.0
+
+
+print("\nThe above results 0 error. Better Evaluation Using Cross-Validation.:\n")
+from sklearn.model_selection import cross_val_score
+scores = cross_val_score(tree_reg, housing_prepared, housing_labels,
+                         scoring="neg_mean_squared_error",
+                         cv=10)
+tree_rmse_scores=np.sqrt(-scores)
+
+def display_scores(scores):
+    print("Scores:",scores)
+    print("Mean:",scores.mean())
+    print("Standard deviation:",scores.std())
+    
+display_scores(tree_rmse_scores)
+
+print("\n The DTR seem to be overfitting (SD is 2610). Let's compute same scores for Lin Regg\n")
+lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels,
+                             scoring="neg_mean_squared_error",
+                             cv=10)
+lin_rmse_scores = np.sqrt(-lin_scores)
+display_scores(lin_rmse_scores)
+print("\n The LinReg is also overfitting (SD is 2731.67 in the book). Let's compute same scores for Random Forest Regg\n")
+from sklearn.ensemble import RandomForestRegressor
+
+forest_reg=RandomForestRegressor()
+forest_reg.fit(housing_prepared, housing_labels)
+forest_reg_housing_prediction=forest_reg.predict(housing_prepared)
+forest_reg_mse=mean_squared_error(housing_labels, forest_reg_housing_prediction)
+forest_rmse = np.sqrt(forest_reg_mse)
+print("\nforest_rmse:\n",forest_rmse)
+forest_reg_scores =cross_val_score(forest_reg, housing_prepared, housing_labels,
+                                    scoring="neg_mean_squared_error",
+                                    cv=10)
+forest_reg_rmse_scores=np.sqrt(-forest_reg_scores)
+display_scores(forest_reg_rmse_scores)
+
+print("\n The Random Forest Reg is also overfitting (SD is 2225.46. Let's compute same scores for Support Vector Machines\n")
+#from sklearn import svm
+
+
+
+
