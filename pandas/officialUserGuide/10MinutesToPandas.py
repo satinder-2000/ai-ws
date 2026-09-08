@@ -18,6 +18,10 @@ print("-----Creating DataFrame-----")
 dates = pd.date_range("20130101", periods=6)
 print("DataFrame:\n",dates)
 
+print("\nCreating a DataFrame\n")
+df = pd.DataFrame(np.random.randn(6,4), index=dates, columns=list("ABCD"))
+print("\ndf:\n",df)
+
 print()
 print("-----DataFrame contains dictionary of objects-----")
 df2 = pd.DataFrame(
