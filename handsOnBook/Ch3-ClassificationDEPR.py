@@ -87,4 +87,27 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import cross_val_predict
 
 sgd_clf = SGDClassifier()
-y_scores= cross_val_predict(sgd_clf,X_train,y_train_5, cv=3, method='decision_function')
+y_scores= cross_val_predict(sgd_clf,X_train,y_train, cv=3, method='decision_function')
+print("\ny_scores:\n",y_scores)
+threshold =0
+y_some_digit_pred = (y_scores > threshold)
+print("(y_scores \> threshold=0 ):\n",y_some_digit_pred)
+threshold =8000
+y_some_digit_pred = (y_scores > threshold)
+print("(y_scores \> threshold=8000 ):\n",y_some_digit_pred)
+print("\nDeciding which threshold to use: using decision_function")
+y_scores=cross_val_predict(sgd_clf, X_train, y_train, cv=3, method="decision_function")
+print("\ncross_val_predict(sgd_clf, X_train, y_train, cv=3, method='decision_function')\n",y_scores)
+
+print("\nUse precision_recall_curve() function for all thresholds\n")
+from sklearn.metrics import precision_recall_curve
+
+precisions, recalls, thresholds = precision_recall_curve(y_train, y_scores)
+
+def plot_precision_recall_vs_threhold(precisions, recalls, thresholds):
+    plt.plot(thresholds, precisions[:1],"b--", label="Precision")
+    plt.plot(thresholds, recalls[:1],"g--", label="Recall")
+    
+
+plot_precision_recall_vs_threhold(precisions, recalls, thresholds)
+plt.show()
